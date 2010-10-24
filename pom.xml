@@ -42,6 +42,21 @@
   		<type>jar</type>
   		<scope>test</scope>
   	</dependency>
+  	<!-- using log4j as our primary logging framework -->
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-log4j12</artifactId>
+  		<version>1.6.1</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  	<!-- Anything using commons-logging should defer to slf4j. -->
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>jcl-over-slf4j</artifactId>
+		<version>1.5.6</version>
+		<scope>runtime</scope>
+	</dependency>
   </dependencies>
   
   <build>
@@ -54,6 +69,33 @@
 				<source>1.6</source>
 				<target>1.6</target>
 			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-enforcer-plugin</artifactId>
+			<version>1.0-beta-1</version>
+			<executions>
+				<execution>
+					<id>ban-other-loggers</id>
+					<goals>
+						<goal>enforce</goal>
+					</goals>
+					<configuration>
+						<rules>
+							<bannedDependencies>
+								<searchTransitive>true</searchTransitive>
+								<excludes>
+									<!-- Ban the secondary frameworks -->
+									<exclude>commons-logging</exclude>
+									<!-- Ban other slf4j bridges so we don't end up in an infinite loop -->
+									<exclude>org.slf4j:slf4j-jdk14</exclude>
+								</excludes>
+								<message>Secondary logging frameworks are banned in preference to org.slf4j:*-over-slf4j</message>
+							</bannedDependencies>
+						</rules>
+					</configuration>
+				</execution>
+			</executions>
 		</plugin>
 		<plugin>
             <groupId>org.easyb</groupId>
